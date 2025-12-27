@@ -77,6 +77,8 @@ def index_view(request):
         'name': 'S2Cart E-Commerce API',
         'version': '1.0.0',
         'description': 'Complete E-Commerce Backend API for S2Cart',
+        'frontend': '/frontend/',
+        'store': '/store/',
         'documentation': {
             'swagger': '/swagger/',
             'redoc': '/redoc/'
@@ -105,9 +107,16 @@ def index_view(request):
 # Import admin URLs from authentication app
 from authentication.admin_urls import urlpatterns as auth_admin_urls
 
+# Import frontend views
+from frontend.views import frontend_view
+
 urlpatterns = [
     # Root and documentation
     path('', index_view, name='index'),
+    
+    # Frontend (E-commerce store UI)
+    path('frontend/', frontend_view, name='frontend'),
+    path('store/', frontend_view, name='store'),  # Alias for frontend
     
     # Swagger/OpenAPI documentation (enabled for all environments)
     re_path(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
@@ -148,6 +157,8 @@ if settings.DEBUG:
     ]
     # Serve media and static files in development
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    # Serve frontend static files
+    urlpatterns += static('/frontend/static/', document_root=settings.BASE_DIR / 'frontend' / 'static')
 
 # Handle 404 and 500 errors
 handler404 = 'Customer_API.views.handler404'

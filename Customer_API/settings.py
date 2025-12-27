@@ -107,6 +107,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'authentication',
     'products',  # E-commerce product catalog
+    'frontend',  # E-commerce frontend
     'whitenoise.runserver_nostatic',  # Static files serving
     'defender',  # For brute force protection
     'storages',  # For cloud storage
@@ -171,7 +172,7 @@ OTP_EXPIRY_TIME = int(os.environ.get('OTP_EXPIRY_TIME', '25'))  # 25 minutes def
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'frontend', 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -295,6 +296,11 @@ USE_TZ = os.environ.get('USE_TZ', 'True').lower() == 'true'
 STATIC_URL = os.environ.get('STATIC_URL', '/static/')
 STATIC_ROOT = os.path.join(BASE_DIR, os.environ.get('STATIC_ROOT_PATH', 'staticfiles'))
 STATICFILES_STORAGE = os.environ.get('STATICFILES_STORAGE', 'whitenoise.storage.CompressedManifestStaticFilesStorage')
+
+# Additional locations of static files
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'frontend', 'static'),
+]
 
 # Media files
 MEDIA_URL = os.environ.get('MEDIA_URL', '/media/')
