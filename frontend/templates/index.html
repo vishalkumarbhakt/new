@@ -4,9 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>S2Cart - E-Commerce Store</title>
+    <title>S2Cart - Smart Home & Decor</title>
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
@@ -76,36 +78,145 @@
     <main class="main-content">
         <!-- Home Page -->
         <section id="homePage" class="page active">
-            <!-- Hero Section -->
-            <div class="hero">
-                <div class="hero-content">
-                    <h1>Welcome to S2Cart</h1>
-                    <p>Discover amazing products at unbeatable prices</p>
-                    <button onclick="showPage('categories')" class="btn btn-primary">Shop Now</button>
+            <!-- Hero Section with Multiple Slides -->
+            <div class="hero-slider">
+                <div class="hero-slide active" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);">
+                    <div class="hero-content">
+                        <span class="hero-tag">NEW COLLECTION</span>
+                        <h1>Transform Your <span class="highlight">Living Space</span></h1>
+                        <p>Discover premium smart home devices & elegant home decor</p>
+                        <div class="hero-buttons">
+                            <button onclick="showPage('categories')" class="btn btn-primary btn-lg">Shop Now</button>
+                            <button onclick="scrollToOffers()" class="btn btn-outline-light btn-lg">View Offers</button>
+                        </div>
+                    </div>
+                    <div class="hero-image">
+                        <img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&h=500&fit=crop" alt="Smart Home">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Offers Banner Strip -->
+            <div class="offers-strip">
+                <div class="offer-item">
+                    <i class="fas fa-truck"></i>
+                    <span>Free Shipping on ₹999+</span>
+                </div>
+                <div class="offer-item">
+                    <i class="fas fa-undo"></i>
+                    <span>30 Day Easy Returns</span>
+                </div>
+                <div class="offer-item">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>2 Year Warranty</span>
+                </div>
+                <div class="offer-item">
+                    <i class="fas fa-headset"></i>
+                    <span>24/7 Support</span>
+                </div>
+            </div>
+            
+            <!-- Deals Section -->
+            <div class="section deals-section" id="offersSection">
+                <div class="section-header">
+                    <h2 class="section-title">🔥 Today's Best Deals</h2>
+                    <div class="countdown-timer">
+                        <span>Ends in:</span>
+                        <div class="timer-box"><span id="hours">12</span>H</div>
+                        <div class="timer-box"><span id="minutes">45</span>M</div>
+                        <div class="timer-box"><span id="seconds">30</span>S</div>
+                    </div>
+                </div>
+                <div class="deals-grid">
+                    <div class="deal-card deal-large" onclick="showProducts('smart-home', 'Smart Home')">
+                        <div class="deal-image">
+                            <img src="https://images.unsplash.com/photo-1558002038-1055907df827?w=600&h=400&fit=crop" alt="Smart Home Devices">
+                        </div>
+                        <div class="deal-content">
+                            <span class="deal-badge">UP TO 50% OFF</span>
+                            <h3>Smart Home Devices</h3>
+                            <p>Smart speakers, lights & more</p>
+                            <button class="btn btn-dark">Shop Now</button>
+                        </div>
+                    </div>
+                    <div class="deal-card" onclick="showProducts('home-decor', 'Home Decor')">
+                        <div class="deal-image">
+                            <img src="https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop" alt="Home Decor">
+                        </div>
+                        <div class="deal-content">
+                            <span class="deal-badge">30% OFF</span>
+                            <h3>Home Decor</h3>
+                            <p>Wall art & accessories</p>
+                        </div>
+                    </div>
+                    <div class="deal-card" onclick="showProducts('lighting', 'Lighting')">
+                        <div class="deal-image">
+                            <img src="https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=400&h=300&fit=crop" alt="Lighting">
+                        </div>
+                        <div class="deal-content">
+                            <span class="deal-badge">40% OFF</span>
+                            <h3>Designer Lighting</h3>
+                            <p>Lamps & fixtures</p>
+                        </div>
+                    </div>
                 </div>
             </div>
             
             <!-- Featured Categories -->
             <div class="section">
-                <h2 class="section-title">Featured Categories</h2>
+                <div class="section-header">
+                    <h2 class="section-title">Shop By Category</h2>
+                    <a href="#" onclick="showPage('categories')" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
+                </div>
                 <div id="featuredCategories" class="category-grid">
                     <!-- Categories will be loaded here -->
                 </div>
             </div>
             
+            <!-- Trending Banner -->
+            <div class="promo-banner">
+                <div class="promo-content">
+                    <span class="promo-tag">TRENDING NOW</span>
+                    <h2>Smart Home Automation</h2>
+                    <p>Control your home with voice commands. Compatible with Alexa & Google Home.</p>
+                    <button class="btn btn-light" onclick="showProducts('smart-home', 'Smart Home')">Explore Collection</button>
+                </div>
+                <div class="promo-image">
+                    <img src="https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=500&h=400&fit=crop" alt="Smart Home Automation">
+                </div>
+            </div>
+            
             <!-- Featured Products -->
             <div class="section">
-                <h2 class="section-title">Featured Products</h2>
+                <div class="section-header">
+                    <h2 class="section-title">Featured Products</h2>
+                    <a href="#" onclick="showPage('categories')" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
+                </div>
                 <div id="featuredProducts" class="product-grid">
                     <!-- Products will be loaded here -->
                 </div>
             </div>
             
             <!-- New Arrivals -->
-            <div class="section">
-                <h2 class="section-title">New Arrivals</h2>
+            <div class="section section-dark">
+                <div class="section-header">
+                    <h2 class="section-title">New Arrivals</h2>
+                    <a href="#" onclick="showPage('categories')" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
+                </div>
                 <div id="newArrivals" class="product-grid">
                     <!-- Products will be loaded here -->
+                </div>
+            </div>
+            
+            <!-- Newsletter Section -->
+            <div class="newsletter-section">
+                <div class="newsletter-content">
+                    <h2>Get Exclusive Offers</h2>
+                    <p>Subscribe to receive updates on new arrivals and special promotions</p>
+                    <form class="newsletter-form" onsubmit="subscribeNewsletter(event)">
+                        <input type="email" placeholder="Enter your email" required>
+                        <button type="submit" class="btn btn-primary">Subscribe</button>
+                    </form>
                 </div>
             </div>
         </section>
