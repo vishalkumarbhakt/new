@@ -24,59 +24,128 @@ from django.views.generic import RedirectView
 # Import health checks
 from .health_checks import health_check, readiness_check
 
-# Import Swagger documentation (only in DEBUG mode)
-if settings.DEBUG:
-    from drf_yasg.views import get_schema_view
-    from drf_yasg import openapi
-    from rest_framework import permissions
+# Import Swagger documentation (enabled for all environments)
+from drf_yasg.views import get_schema_view
+from drf_yasg import openapi
+from rest_framework import permissions
 
-    schema_view = get_schema_view(
-        openapi.Info(
-            title="S2Cart API",
-            default_version='v1',
-            description="API documentation for S2Cart Mobile App",
-            terms_of_service=f"https://customer-api.www.s2cart.com/terms/",
+# Import product URL patterns
+from products.urls import public_urlpatterns as product_public_urls
+from products.urls import customer_urlpatterns as product_customer_urls
+from products.urls import admin_urlpatterns as product_admin_urls
 
-            contact=openapi.Contact(email="s2cartofficial@gmail.com"),
-            license=openapi.License(name="Private License"),
-        ),
-        public=True,
-        permission_classes=(permissions.AllowAny,),
-    )
+schema_view = get_schema_view(
+    openapi.Info(
+        title="S2Cart E-Commerce API",
+        default_version='v1',
+        description="""
+## S2Cart E-Commerce Backend API
+
+A complete production-ready e-commerce backend API built with Django REST Framework.
+
+### Features:
+- **Authentication**: JWT and Token-based authentication with device tracking
+- **Products**: Complete product catalog with categories, images, and reviews
+- **Cart**: Multi-store cart management with item tracking
+- **Orders**: Full order lifecycle management
+- **Payments**: PhonePe and Paytm payment gateway integration
+- **User Management**: Profile, addresses, and wishlist management
+
+### API Namespaces:
+- `/api/public/*` - Public APIs (no authentication required)
+- `/api/customer/*` - Customer APIs (authentication required)
+- `/api/admin/*` - Admin APIs (staff authentication required)
+- `/api/auth/*` - Authentication and legacy APIs
+
+### Authentication:
+Use Bearer token authentication. Include the JWT token in the Authorization header:
+```
+Authorization: Bearer <your_jwt_token>
+```
+        """,
+        terms_of_service="https://customer-api.s2cart.com/terms/",
+        contact=openapi.Contact(email="s2cartofficial@gmail.com"),
+        license=openapi.License(name="Private License"),
+    ),
+    public=True,
+    permission_classes=(permissions.AllowAny,),
+)
 
 # Simple view for root URL
 def index_view(request):
     return JsonResponse({
-        'name': 'S2Cart API',
-        'description': 'Backend API for S2Cart Android App',
+        'name': 'S2Cart E-Commerce API',
+        'version': '1.0.0',
+        'description': 'Complete E-Commerce Backend API for S2Cart',
+        'documentation': {
+            'swagger': '/swagger/',
+            'redoc': '/redoc/'
+        },
         'endpoints': {
-            'api': '/api/auth/',
+            'public': {
+                'products': '/api/public/products/',
+                'categories': '/api/public/categories/',
+            },
+            'customer': {
+                'wishlist': '/api/customer/wishlist/',
+                'reviews': '/api/customer/products/<slug>/reviews/',
+            },
+            'admin': {
+                'products': '/api/admin/products/',
+                'categories': '/api/admin/categories/',
+                'orders': '/api/admin/orders/',
+            },
+            'auth': '/api/auth/',
             'jwt': '/api/auth/jwt/',
-            'admin': '/admin/',
+            'admin_panel': '/admin/',
             'health': '/health/'
         }
     })
 
+# Import admin URLs from authentication app
+from authentication.admin_urls import urlpatterns as auth_admin_urls
+
 urlpatterns = [
+    # Root and documentation
     path('', index_view, name='index'),
+    
+    # Swagger/OpenAPI documentation (enabled for all environments)
+    re_path(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
+    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
+    
+    # Admin panel
     path('admin/', admin.site.urls),
+    
+    # Public APIs - No authentication required
+    path('api/public/', include((product_public_urls, 'public'), namespace='public')),
+    
+    # Customer APIs - Authentication required
+    path('api/customer/', include((product_customer_urls, 'customer'), namespace='customer')),
+    
+    # Admin APIs - Staff authentication required (products)
+    path('api/admin/', include((product_admin_urls, 'admin_api'), namespace='admin_api')),
+    # Admin APIs - Orders and Users management
+    path('api/admin/', include((auth_admin_urls, 'admin_auth'), namespace='admin_auth')),
+    
+    # Authentication APIs (legacy and new)
     path('api/auth/', include('authentication.urls')),
     path('api/auth/jwt/', include('authentication.jwt_urls')),  # JWT token endpoints
+    
+    # Health check endpoints
     path('health/', health_check, name='health_check'),
     path('health/readiness/', readiness_check, name='readiness_check'),
     path('health/liveness/', health_check, name='liveness_check'),  # Alias for Kubernetes
+    
+    # Favicon
     path('favicon.ico', RedirectView.as_view(url='/static/favicon.ico')),
 ]
 
-# Add Swagger documentation URLs only in development mode
+# Add Debug Toolbar URLs in development mode
 if settings.DEBUG:
     urlpatterns += [
-        re_path(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
-        path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
-        path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
-        path('__debug__/', include('debug_toolbar.urls')),  # Debug Toolbar URLs
+        path('__debug__/', include('debug_toolbar.urls')),
     ]
-
     # Serve media and static files in development
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
