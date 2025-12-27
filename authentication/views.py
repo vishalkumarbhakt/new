@@ -1450,9 +1450,16 @@ class OrderListCreateView(generics.ListCreateAPIView):
             cart = get_object_or_404(Cart, user=self.request.user, store_id=store_id)
         else:
             # Get the first cart with items if no store_id specified
-            cart = Cart.objects.filter(user=self.request.user).first()
+            # Find a cart that actually has items
+            user_carts = Cart.objects.filter(user=self.request.user)
+            cart = None
+            for potential_cart in user_carts:
+                if CartItem.objects.filter(cart=potential_cart, is_saved_for_later=False).exists():
+                    cart = potential_cart
+                    break
+            
             if not cart:
-                raise serializers.ValidationError("No cart found")
+                raise serializers.ValidationError("No cart with items found. Please add items to your cart first.")
         
         cart_items = CartItem.objects.filter(cart=cart, is_saved_for_later=False)
         

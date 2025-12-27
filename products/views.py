@@ -4,7 +4,7 @@ Provides public, customer, and admin APIs for product management.
 """
 import logging
 from django.shortcuts import get_object_or_404
-from django.db.models import Q, Avg
+from django.db.models import Q, Avg, F
 from rest_framework import generics, status, filters
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -364,7 +364,7 @@ class AdminProductListCreateView(generics.ListCreateAPIView):
         low_stock = self.request.query_params.get('low_stock')
         if low_stock and low_stock.lower() == 'true':
             queryset = queryset.filter(
-                stock_quantity__lte=models.F('low_stock_threshold'),
+                stock_quantity__lte=F('low_stock_threshold'),
                 is_track_stock=True
             )
         

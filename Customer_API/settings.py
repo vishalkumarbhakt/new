@@ -399,13 +399,14 @@ SIMPLE_JWT = {
 
 # CORS settings optimized for Android
 CORS_ALLOW_ALL_ORIGINS = False  # More secure
-_cors_origins_env = os.environ.get('CORS_ALLOWED_ORIGINS', '')
-_cors_extra_origins = [origin.strip() for origin in _cors_origins_env.split(',') if origin.strip()]
+# Parse additional CORS origins from environment, filtering out empty strings
 CORS_ALLOWED_ORIGINS = [
     "file://",  # Required for Android WebView
     "https://securegw.paytm.in",
     "https://securegw-stage.paytm.in",
-    *_cors_extra_origins
+] + [
+    origin.strip() for origin in os.environ.get('CORS_ALLOWED_ORIGINS', '').split(',')
+    if origin.strip()
 ]
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_METHODS = [
@@ -437,12 +438,13 @@ CORS_EXPOSE_HEADERS = [
 
 # CSRF settings
 CSRF_COOKIE_SECURE = os.environ.get('CSRF_COOKIE_SECURE', 'True').lower() == 'true'
-_csrf_origins_env = os.environ.get('CSRF_TRUSTED_ORIGINS', '')
-_csrf_extra_origins = [origin.strip() for origin in _csrf_origins_env.split(',') if origin.strip()]
+# Parse additional CSRF trusted origins from environment, filtering out empty strings
 CSRF_TRUSTED_ORIGINS = [
     "https://securegw.paytm.in",
     "https://securegw-stage.paytm.in",
-    *_csrf_extra_origins
+] + [
+    origin.strip() for origin in os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',')
+    if origin.strip()
 ]
 CSRF_COOKIE_HTTPONLY = os.environ.get('CSRF_COOKIE_HTTPONLY', 'False').lower() == 'true'
 CSRF_USE_SESSIONS = os.environ.get('CSRF_USE_SESSIONS', 'False').lower() == 'true'
