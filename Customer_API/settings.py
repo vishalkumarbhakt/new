@@ -106,36 +106,35 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',  # For token blacklisting
     'corsheaders',
     'authentication',
+    'products',  # E-commerce product catalog
     'whitenoise.runserver_nostatic',  # Static files serving
     'defender',  # For brute force protection
     'storages',  # For cloud storage
+    'drf_yasg',  # Swagger API documentation (enabled for all environments)
 ]
+
+# Swagger settings for API documentation
+SWAGGER_SETTINGS = {
+    'SECURITY_DEFINITIONS': {
+        'Bearer': {
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header',
+            'description': 'JWT Authorization header using the Bearer scheme. Example: "Bearer {token}"'
+        }
+    },
+    'USE_SESSION_AUTH': False,
+    'JSON_EDITOR': True,
+    'REFETCH_SCHEMA_WITH_AUTH': True,
+    'REFETCH_SCHEMA_ON_LOGOUT': True,
+}
 
 # Add development-specific apps
 if DEBUG:
     INSTALLED_APPS += [
         'django_extensions',  # Useful development tools
         'debug_toolbar',      # Django Debug Toolbar
-        'drf_yasg',          # Swagger API documentation
     ]
-    
-    # Swagger settings for API documentation
-    SWAGGER_SETTINGS = {
-        'SECURITY_DEFINITIONS': {
-            'Token': {
-                'type': 'apiKey',
-                'name': 'Authorization',
-                'in': 'header'
-            },
-            'JWT': {
-                'type': 'apiKey',
-                'name': 'Authorization',
-                'in': 'header'
-            }
-        },
-        'USE_SESSION_AUTH': False,
-        'JSON_EDITOR': True,
-    }
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -400,11 +399,13 @@ SIMPLE_JWT = {
 
 # CORS settings optimized for Android
 CORS_ALLOW_ALL_ORIGINS = False  # More secure
+_cors_origins_env = os.environ.get('CORS_ALLOWED_ORIGINS', '')
+_cors_extra_origins = [origin.strip() for origin in _cors_origins_env.split(',') if origin.strip()]
 CORS_ALLOWED_ORIGINS = [
     "file://",  # Required for Android WebView
     "https://securegw.paytm.in",
     "https://securegw-stage.paytm.in",
-    *os.environ.get('CORS_ALLOWED_ORIGINS', '').split(',')
+    *_cors_extra_origins
 ]
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_METHODS = [
@@ -436,10 +437,12 @@ CORS_EXPOSE_HEADERS = [
 
 # CSRF settings
 CSRF_COOKIE_SECURE = os.environ.get('CSRF_COOKIE_SECURE', 'True').lower() == 'true'
+_csrf_origins_env = os.environ.get('CSRF_TRUSTED_ORIGINS', '')
+_csrf_extra_origins = [origin.strip() for origin in _csrf_origins_env.split(',') if origin.strip()]
 CSRF_TRUSTED_ORIGINS = [
     "https://securegw.paytm.in",
     "https://securegw-stage.paytm.in",
-    *os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',')
+    *_csrf_extra_origins
 ]
 CSRF_COOKIE_HTTPONLY = os.environ.get('CSRF_COOKIE_HTTPONLY', 'False').lower() == 'true'
 CSRF_USE_SESSIONS = os.environ.get('CSRF_USE_SESSIONS', 'False').lower() == 'true'

@@ -1438,12 +1438,23 @@ class OrderListCreateView(generics.ListCreateAPIView):
         """
         Military-grade order creation with comprehensive security validation
         Prevents price manipulation and financial attacks
+        Includes stock deduction for products
         """
         from decimal import Decimal, InvalidOperation
         
+        # Get store_id from request (for multi-store support)
+        store_id = self.request.data.get('store_id')
+        
         # Get cart items and validate prices before creating order
-        cart = get_object_or_404(Cart, user=self.request.user)
-        cart_items = CartItem.objects.filter(cart=cart)
+        if store_id:
+            cart = get_object_or_404(Cart, user=self.request.user, store_id=store_id)
+        else:
+            # Get the first cart with items if no store_id specified
+            cart = Cart.objects.filter(user=self.request.user).first()
+            if not cart:
+                raise serializers.ValidationError("No cart found")
+        
+        cart_items = CartItem.objects.filter(cart=cart, is_saved_for_later=False)
         
         if not cart_items:
             raise serializers.ValidationError("Cannot create order with empty cart")
@@ -1452,6 +1463,9 @@ class OrderListCreateView(generics.ListCreateAPIView):
             # Military-grade calculation with null-safety and overflow protection
             subtotal = Decimal('0.00')
             discount_amount = Decimal('0.00')
+            
+            # Track products for stock deduction
+            products_to_update = []
             
             for item in cart_items:
                 # Validate each item's financial data
@@ -1472,6 +1486,22 @@ class OrderListCreateView(generics.ListCreateAPIView):
                 if item_discount < 0:
                     logger.critical(f"Security Alert: Negative discount in CartItem ID {item.id}")
                     raise serializers.ValidationError("Invalid discount detected")
+                
+                # Check stock availability if product exists
+                try:
+                    from products.models import Product
+                    product = Product.objects.get(id=item.product_id)
+                    if product.is_track_stock and not product.allow_backorder:
+                        if product.stock_quantity < quantity:
+                            raise serializers.ValidationError(
+                                f"Insufficient stock for {item.product_name}. Available: {product.stock_quantity}"
+                            )
+                    products_to_update.append((product, quantity))
+                except Product.DoesNotExist:
+                    # Product might be from external source, continue without stock check
+                    pass
+                except Exception as e:
+                    logger.warning(f"Could not check stock for product {item.product_id}: {e}")
                 
                 # Overflow protection
                 item_total = unit_price * quantity
@@ -1513,9 +1543,10 @@ class OrderListCreateView(generics.ListCreateAPIView):
             logger.critical(f"Security Alert: Financial calculation error in order creation: {str(e)}")
             raise serializers.ValidationError("Invalid financial data detected")
         
-        # Create order with server-calculated values
+        # Create order with server-calculated values and CREATED status
         order = serializer.save(
             user=self.request.user,
+            status='CREATED',
             subtotal=subtotal,
             discount_amount=discount_amount,
             total_amount=server_calculated_total
@@ -1529,11 +1560,18 @@ class OrderListCreateView(generics.ListCreateAPIView):
                 product_id=item.product_id,
                 product_name=item.product_name,
                 product_image_url=item.product_image_url,
+                product_sku=item.product_sku,
+                product_variant=item.product_variant,
                 quantity=item.quantity,
                 unit_price=item.unit_price,
                 discount_amount=item.discount_amount or Decimal('0.00')
             ))
         OrderItem.objects.bulk_create(order_items)
+        
+        # Deduct stock from products
+        for product, quantity in products_to_update:
+            product.decrement_stock(quantity)
+            logger.info(f"Stock decremented: {product.name} by {quantity} units")
             
         # Clear the cart after order creation if requested
         if self.request.data.get('clear_cart', True):

@@ -1208,11 +1208,12 @@ class Order(models.Model):
     order_number = models.CharField(max_length=50, unique=True, help_text="Unique order number")
     order_date = models.DateTimeField(auto_now_add=True)
     
-    # Enhanced order status
+    # Enhanced order status with full lifecycle
     status = models.CharField(
         max_length=25, 
         choices=[
-            ('PLACED', 'Placed'),
+            ('CREATED', 'Created'),  # Initial state when order is created
+            ('PLACED', 'Placed'),    # Order placed but not confirmed
             ('CONFIRMED', 'Confirmed'),
             ('PAID', 'Paid'),
             ('PROCESSING', 'Processing'),
@@ -1224,7 +1225,7 @@ class Order(models.Model):
             ('CANCELLED', 'Cancelled'),
             ('REFUNDED', 'Refunded'),
         ],
-        default='PLACED'
+        default='CREATED'
     )
     
     # Shipping details
@@ -1274,6 +1275,7 @@ class Order(models.Model):
     
     # Timestamps
     confirmed_at = models.DateTimeField(blank=True, null=True)
+    paid_at = models.DateTimeField(blank=True, null=True, help_text="When payment was completed")
     shipped_at = models.DateTimeField(blank=True, null=True)
     delivered_at = models.DateTimeField(blank=True, null=True)
     
@@ -1299,7 +1301,7 @@ class Order(models.Model):
     
     @property
     def can_cancel(self):
-        return self.status in ['PLACED', 'CONFIRMED', 'PAID'] and not self.shipped_at
+        return self.status in ['CREATED', 'PLACED', 'CONFIRMED', 'PAID'] and not self.shipped_at
     
     @property
     def can_return(self):
